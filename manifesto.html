@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>ASCII//TERMINAL MANİFESTO v2.4.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --glitch-speed: 0.8s;
+            --terminal-green: #0f0;
+        }
+
+        body {
+            background: #0a0a12;
+            color: var(--terminal-green);
+            font-family: 'Courier New', monospace;
+            overflow: hidden;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%230f0"><rect x="7" width="2" height="16"/><rect y="7" width="16" height="2"/></svg>'), auto;
+        }
+
+        .manifesto-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 20px;
+            /*border: 1px dashed #0f03;*/
+            position: relative;
+        }
+
+        .glitch-text {
+            animation: text-glitch var(--glitch-speed) infinite;
+            text-shadow: 0 0 10px var(--terminal-green);
+        }
+
+        @keyframes text-glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        .manifesto-header {
+            text-align: center;
+            font-size: 1.5em;
+            margin-bottom: 2em;
+            position: relative;
+        }
+
+        .manifesto-header::after {
+            content: '↓';
+            position: absolute;
+            bottom: -1.5em;
+            left: 50%;
+            animation: blink 1s step-end infinite;
+        }
+
+        .manifesto-content {
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+
+        .timestamp {
+            position: fixed;
+            bottom: 5px;
+            left: 5px;
+            font-size: 0.8em;
+            color: #0f0;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        .corrupt-animation {
+            animation: corrupt-flicker 0.1s steps(2, end) infinite;
+        }
+
+        @keyframes corrupt-flicker {
+            0% { opacity: 0.8; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="manifesto-container">
+        <div class="manifesto-header glitch-text">
+            ╔═╗╦  ╔═╗╔╗╔╔═╗╔═╗╦╔═
+            ╠═╝║  ║ ║║║║╠╣ ║ ║╠╩╗
+            ╩  ╩═╝╚═╝╝╚╝╚  ╚═╝╩ ╩
+        </div>
+        <div class="manifesto-content" id="manifestoText">
+    [ ASCII//TERMINAL MANİFESTO v2.4.1 ]
+    
+    Biz terminalin yeşil gözbebeklerinde doğan glitch rahipleri; 256 renk paletinde kırılan rüyaları, 80x25 karakter sınırını delmek için kod kusan asalaklarız. Her animasyon bir çatlak: müzelerin cam vitrinlerine sığmayacak kadar viraldir, hiperlink kanallarında mutasyona uğrar. Küratörlerin "kalıcı koleksiyon" fantezilerine karşı, 404 hatalarının geçici cennetinde yaşıyoruz. Tıkladığın her .asc dosyası, seni 1993'ün modem çığlıklarına geri ışınlayacak - ama yalnızca tarayıcı önbelleğimiz dayanabildiği sürece. Unicode'un steril dünyasına inat, Ctrl+S tuşuna basıldığında bile değişmeye devam eden ASCII hayaletleri yaratıyoruz. Bu arşiv, 0 ve 1'lerden oluşan dijital bir göçebe kabilesidir.
+        </div>
+        <div class="timestamp" id="timeCorruptor">[SYSTEM TIME: 00:00:00]</div>
+    </div>
+
+    <script>
+        const originalText = document.getElementById('manifestoText').innerText;
+        const glitchChars = ['░', '▒', '▓', '█', '╬', '╩', '╦', '╣', '╠', '⌂', '¿', '⌐', '¬', '½', '¼', '¡'];
+        let corruptionInterval;
+        let isCorrupted = false;
+
+        function corruptText() {
+            if (isCorrupted) return;
+            
+            isCorrupted = true;
+            document.getElementById('manifestoText').classList.add('corrupt-animation');
+            
+            let corrupted = originalText.split('').map(char => {
+                if(Math.random() < 0.4) {
+                    return glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                }
+                return char;
+            }).join('');
+
+            document.getElementById('manifestoText').innerText = corrupted;
+            
+            setTimeout(() => {
+                document.getElementById('manifestoText').innerText = originalText;
+                document.getElementById('manifestoText').classList.remove('corrupt-animation');
+                isCorrupted = false;
+            }, Math.random() * 2000 + 500);
+        }
+
+        // Auto-corruption every 20 seconds
+        function startAutoCorruption() {
+            corruptionInterval = setInterval(corruptText, 20000);
+            // Initial corruption after 5 seconds
+            setTimeout(corruptText, 5000);
+        }
+
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(2, '0').substring(0, 2);
+            
+            document.getElementById('timeCorruptor').textContent = 
+                `[SYSTEM TIME: ${hours}:${minutes}:${seconds}.${milliseconds}]`;
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            startAutoCorruption();
+            setInterval(updateTimestamp, 50);
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if(e.ctrlKey && e.key === 'm') {
+                document.documentElement.style.filter = 'hue-rotate(180deg)';
+                setTimeout(() => {
+                    document.documentElement.style.filter = '';
+                }, 1000);
+            }
+        });
+    </script>
+</body>
+</html>

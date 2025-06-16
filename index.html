@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASCII Archive // Terminal v1.0.3</title>
+  <style>
+    /* Orijinal CSS tanımlarının tamamı korundu */
+    :root {
+      --terminal-bg: #0a0a12;
+      --terminal-green: #0f0;
+      --terminal-cyan: #0ff;
+      --terminal-purple: #b19cd9;
+      --terminal-red: #f44;
+      --terminal-glow: rgba(0, 255, 0, 0.7);
+      --terminal-border: #333;
+      --text-color: #e0e0e0;
+      --text-shadow: 0 0 8px var(--terminal-glow);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #000;
+      overflow: hidden;
+      font-family: 'Inconsolata', monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      perspective: 1000px;
+    }
+
+    .matrix-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      opacity: 0.15;
+    }
+
+    .terminal-container {
+      position: relative;
+      width: 85%;
+      max-width: 800px;
+      height: 70vh;
+      background: var(--terminal-bg);
+      border-radius: 8px;
+      box-shadow: 0 0 30px rgba(0, 255, 0, 0.5),
+        inset 0 0 10px rgba(0, 255, 0, 0.2);
+      overflow: hidden;
+      border: 1px solid var(--terminal-green);
+      transform-style: preserve-3d;
+      animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes float {
+
+      0%,
+      100% {
+        transform: translateY(0) rotateX(10deg) rotateY(5deg);
+      }
+
+      50% {
+        transform: translateY(-20px) rotateX(5deg) rotateY(10deg);
+      }
+    }
+
+    .terminal-header {
+      background: linear-gradient(to right, #0a0a0a, #111);
+      padding: 8px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--terminal-green);
+      font-family: 'Share Tech Mono', monospace;
+      border-bottom: 1px solid var(--terminal-green);
+      box-shadow: 0 2px 15px rgba(0, 255, 0, 0.3);
+    }
+
+    .terminal-buttons {
+      display: flex;
+      gap: 8px;
+      cursor: pointer
+    }
+
+    .terminal-button {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .terminal-button.red {
+      background: #ff5f56;
+    }
+
+    .terminal-button.yellow {
+      background: #ffbd2e;
+    }
+
+    .terminal-button.green {
+      background: #27c93f;
+    }
+
+    .terminal-body {
+      padding: 15px;
+      height: calc(100% - 40px);
+      overflow-y: auto;
+      color: var(--text-color);
+      text-shadow: var(--text-shadow);
+      line-height: 1.6;
+    }
+
+    .typing-text {
+      white-space: pre-wrap;
+      font-size: 1.1rem;
+    }
+
+    .overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        display: none;
+        z-index: 1000;
+    }
+
+    .terminal-modal {
+        position: inherit;
+        top: 5%;
+        left: 5%;
+        transform: translate(-50%, -50%);
+        z-index: 1001;
+        animation: float 8s ease-in-out infinite;
+        border: 1px solid var(--terminal-green);
+        box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+    }
+
+    .terminal-modal .terminal-body {
+        overflow: hidden !important;
+        padding: 0 !important;
+    }
+
+    #animation-frame {
+        overflow: hidden !important;
+    }
+
+    .modal-controls {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+    }
+
+    .modal-controls button {
+        background: var(--terminal-green) !important;
+        border: 1px solid rgba(0,255,0,0.3);
+        border-radius: 4px;
+        padding: 8px 20px;
+        color: #000;
+        font-family: 'Share Tech Mono', monospace;
+        transition: all 0.3s;
+    }
+
+    .modal-controls button:hover {
+        box-shadow: 0 0 10px var(--terminal-green);
+        cursor: pointer
+    }
+
+    /* ASCII Index Özel Stiller */
+    .ascii-index {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .ascii-item {
+      padding: 10px;
+      border: 1px solid rgba(0, 255, 0, 0.3);
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .ascii-item:hover {
+      background: rgba(0, 255, 0, 0.05);
+      box-shadow: 0 0 15px rgba(0, 255, 0, 0.2);
+    }
+
+    .ascii-link {
+      color: var(--terminal-cyan);
+      text-decoration: none;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    .ascii-link:hover {
+      color: var(--terminal-purple);
+      text-shadow: var(--text-shadow);
+    }
+
+    .file-info {
+      font-size: 0.8em;
+      color: var(--terminal-green);
+      margin-top: 5px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .ascii-item {
+      opacity: 0;
+      transform: translateY(10px);
+      animation: itemAppear 0.5s forwards;
+      animation-delay: calc(var(--index) * 0.1s);
+    }
+
+    @keyframes itemAppear {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Diğer orijinal stiller korundu */
+  </style>
+</head>
+
+<body>
+  <div class="overlay" id="modal-overlay"></div>
+
+  <canvas id="matrix" class="matrix-background"></canvas>
+
+  <div class="terminal-container">
+    <div class="terminal-header">
+      <div class="terminal-buttons">
+        <div class="terminal-button red"></div>
+        <div class="terminal-button yellow"></div>
+        <div class="terminal-button green"></div>
+      </div>
+      <div class="glitch" data-text="root@ascii-archive:~">root@ascii-archive:~</div>
+      <div class="terminal-buttons">
+        <div style="width: 20px;"></div>
+      </div>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+      <div id="typing-text" class="typing-text"></div>
+
+      <div class="ascii-index hidden"> <!-- hidden sınıfı eklendi -->
+        <div class="ascii-item">
+          <a href="manifesto.html" class="ascii-link" data-aspect="16/9">┌─ manifesto-v2.nfo</a>
+          <div class="file-info">[Size: 666B] [Tags: dogma, glitch, eternal]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="76.html" class="ascii-link" data-aspect="3/4">└─ pry-ico.asc</a>
+          <div class="file-info">[Size: 7.1KB] [Tags: holy, serve]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="56 testti big.html" class="ascii-link" data-aspect="3/4">└─ vhs-cry-big.asc</a>
+          <div class="file-info">[Size: 16.6KB] [Tags: tech, fluid]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="anim 46.html" class="ascii-link" data-aspect="3/4">├─ holy-m.asc</a>
+          <div class="file-info">[Size: 6.6KB] [Tags: tech, fluid]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="animation67 Braille.html" class="ascii-link" data-aspect="3/4">└─ cant-see.asc</a>
+          <div class="file-info">[Size: 7.6KB] [Tags: braille, turn]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="59.html" class="ascii-link" data-aspect="3/4">└─ mono-up.asc</a>
+          <div class="file-info">[Size: 7.6KB] [Tags: dark, turn]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="58.html" class="ascii-link" data-aspect="3/4">└─ must-glow.asc</a>
+          <div class="file-info">[Size: 7.6KB] [Tags: shine, turn]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="51.html" class="ascii-link" data-aspect="3/4">└─ try-low.asc</a>
+          <div class="file-info">[Size: 7.6KB] [Tags: single, poor]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="45.html" class="ascii-link" data-aspect="3/4">└─ sssh.asc</a>
+          <div class="file-info">[Size: 7.6KB] [Tags: low, quiet]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="73.html" class="ascii-link" data-aspect="3/4">└─ in-hell.asc</a>
+          <div class="file-info">[Size: 7.6KB] [Tags: dogma, down]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="animation (1)op.html" class="ascii-link" data-aspect="1/1">┌─ cyber-ball.asc</a>
+          <div class="file-info">[Size: 14.8KB] [Tags: fantasy, creature]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="eyetestwmyfont.html" class="ascii-link" data-aspect="16/9">├─ neon-eye.asc</a>
+          <div class="file-info">[Size: 3.9KB] [Tags: cyberpunk, cityscape]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="animationScar.html" class="ascii-link" data-aspect="1/1">├─ head-scar.asc</a>
+          <div class="file-info">[Size: 4.6KB] [Tags: retro, game]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="39.html" class="ascii-link" data-aspect="3/4">┌─ reverse-dav.asc</a>
+          <div class="file-info">[Size: 3.6KB] [Tags: soft, soul]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="animation38.html" class="ascii-link" data-aspect="3/4">├─ fire-soul.asc</a>
+          <div class="file-info">[Size: 6.9KB] [Tags: retro, game]</div>
+        </div>
+
+        <div class="ascii-item">
+          <a href="animation48.html" class="ascii-link" data-aspect="3/4">┌─ hnkps-dream.asc</a>
+          <div class="file-info">[Size: 31.1KB] [Tags: retro, game]</div>
+        </div>
+
+        <!-- Diğer öğeler buraya eklenebilir -->
+
+        <div class="ascii-item">
+          <a href="animationScream.html" class="ascii-link" data-aspect="1/1">└─ scream-soul.asc</a>
+          <div class="file-info">[Size: 3.4KB] [Tags: tech, hardware]</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Yeni fonksiyonlar
+    function openAnimationModal(src, aspectRatio = "1/1") {
+        const [widthRatio, heightRatio] = aspectRatio.split('/').map(Number);
+        const aspectValue = heightRatio / widthRatio;
+        
+        const maxWidth = Math.min(window.innerWidth * 0.9, 1200);
+        const maxHeight = Math.min(window.innerHeight * 0.9, 800);
+        
+        // Tam aspect ratio hesaplama
+        let iframeWidth = maxWidth;
+        let iframeHeight = iframeWidth * aspectValue;
+        
+        if(iframeHeight > maxHeight) {
+            iframeHeight = maxHeight;
+            iframeWidth = iframeHeight / aspectValue;
+        }
+
+        // Pixel perfect adjustment
+        iframeWidth = Math.floor(iframeWidth);
+        iframeHeight = Math.floor(iframeHeight);
+
+        const modalHTML = `
+        <div class="terminal-container terminal-modal" 
+            style="width:${iframeWidth}px; 
+                    height:${iframeHeight + 40}px"> <!-- Header height compensation -->
+            <div class="terminal-header">
+                <div class="terminal-buttons">
+                    <div class="terminal-button red" onclick="closeAnimationModal()"></div>
+                    <div class="terminal-button yellow"></div>
+                    <div class="terminal-button green"></div>
+                </div>
+                <div class="glitch" data-text="preview@ascii-archive:~">preview@ascii-archive:~</div>
+                <div class="terminal-buttons">
+                    <div style="width: 20px;"></div>
+                </div>
+            </div>
+            <div class="terminal-body">
+                <iframe 
+                    id="animation-frame"
+                    src="${src}"
+                    style="width:100%; 
+                          height:${iframeHeight}px;
+                          border:none;
+                          display:block;
+                          pointer-events: auto;"
+                    loading="eager"
+                    sandbox="allow-scripts allow-same-origin"
+                ></iframe>
+                <div class="modal-controls">
+                    <button onclick="togglePlay()">▶ Play/Pause</button>
+                </div>
+            </div>
+        </div>`;
+        
+        const overlay = document.getElementById('modal-overlay');
+        overlay.innerHTML = modalHTML;
+        overlay.style.display = 'block';
+
+        // Advanced color sync
+        const colorSync = setInterval(() => {
+            try {
+                const iframe = document.getElementById('animation-frame');
+                const container = iframe.contentDocument?.querySelector('.ascii-container');
+                if(container) {
+                    const bgColor = getComputedStyle(container).backgroundColor;
+                    overlay.querySelector('.terminal-modal').style.backgroundColor = bgColor;
+                    clearInterval(colorSync);
+                }
+            } catch(e) {
+                // Safe error handling
+            }
+        }, 100);
+
+        // Perfect aspect ratio enforcement
+        const resizeHandler = () => {
+            overlay.querySelector('.terminal-modal').style.transform = 'translate(-50%, -50%)';
+        };
+        window.addEventListener('resize', resizeHandler);
+        overlay._resizeHandler = resizeHandler;
+    }
+
+    // Güncellenmiş close fonksiyonu
+    function closeAnimationModal() {
+        const overlay = document.getElementById('modal-overlay');
+        overlay.style.display = 'none';
+        overlay.innerHTML = '';
+        window.removeEventListener('resize', overlay._resizeHandler);
+    }
+    
+    // Hnkps close
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+      closeAnimationModal();
+      } 
+    });
+
+    function togglePlay() {
+        const iframe = document.querySelector('#animation-frame');
+        iframe.contentWindow.postMessage('toggle', '*');
+    }
+
+    // Linklere tıklama olayı ekle
+    document.querySelectorAll('.ascii-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const aspectRatio = this.dataset.aspect || "1/1";
+            openAnimationModal(this.href, aspectRatio);
+        });
+    });
+    
+    // Orijinal Matrix efekti ve animasyonlar korundu
+    const canvas = document.getElementById('matrix');
+    const ctx = canvas.getContext('2d');
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const katakana = 'アァカサタナハマヤャラワガザダバパイィキシチニヒミリヰギジヂビピウゥクスツヌフムユュルグズブヅプエェケセテネヘメレヱゲゼデベペオォコソトノホモヨョロヲゴゾドボポヴッン';
+    const latin = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const nums = '0123456789';
+    const symbols = '!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~';
+    const binary = '01';
+    
+    const alphabet = katakana + latin + nums + symbols + binary;
+    
+    const fontSize = 16;
+    const columns = canvas.width / fontSize;
+    
+    const rainDrops = [];
+    
+    for (let x = 0; x < columns; x++) {
+        rainDrops[x] = 1;
+    }
+    
+    function draw() {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#0f0';
+        ctx.font = fontSize + 'px monospace';
+        
+        for (let i = 0; i < rainDrops.length; i++) {
+            const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
+            ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
+            
+            if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                rainDrops[i] = 0;
+            }
+            rainDrops[i]++;
+        }
+        
+        requestAnimationFrame(draw);
+    }
+    
+    // Orijinal yazı efekti korundu
+    const terminalText = document.getElementById('typing-text');
+    const messages = [
+        { text: "Booting ASCII Archive System...", delay: 50 },
+        { text: "██████████████ 100%", delay: 30, style: "color: #0ff" },
+        { text: "\n", delay: 200 },
+        { text: "> ACCESS GRANTED - WELCOME TO THE ARCHIVE", delay: 10, style: "color: #0f0" },
+        { text: "\n", delay: 50 },
+        { text: "> Initializing ASCII Archive v1.3.7...", delay: 20 },
+        { text: "\n", delay: 50 },
+        { text: "> Scanning repository...", delay: 20 },
+        { text: "\n\n", delay: 100 },
+        { text: ">> SYSTEM STATUS <<", delay: 10, style: "color: #b19cd9" },
+        { text: "\n", delay: 100 },
+        { text: "> Total Artifacts: 42", delay: 20 },
+        { text: "\n", delay: 50 },
+        { text: "> Last Updated: 2024-03-15", delay: 20 },
+        { text: "\n", delay: 50 },
+        { text: "> Storage Node: depsite-02a", delay: 20 },
+        { text: "\n\n", delay: 100 },
+        { text: ">> NAVIGATION GUIDE <<", delay: 10, style: "color: #b19cd9" },
+        { text: "\n", delay: 100 },
+        { text: "> Click artifacts to view full ASCII", delay: 30 },
+        { text: "\n", delay: 50 },
+        { text: "> Use CTRL+F to search", delay: 30 },
+        { text: "\n", delay: 50 },
+        { text: "> Scroll to browse collection", delay: 30 },
+        { text: "\n\n", delay: 100 },
+        { text: " ░█▀█░█▀▀░█▀▀░▀█▀░▀█▀░░░█▀█░█▀▄░█▀▀░█░█░▀█▀░█░█░█▀▀░", delay: 2, style: "font-size: 1.4em" },
+        { text: "\n", delay: 1 },
+        { text: " ░█▀█░▀▀█░█░░░░█░░░█░░░░█▀█░█▀▄░█░░░█▀█░░█░░▀▄▀░█▀▀░", delay: 2, style: "font-size: 1.4em" },
+        { text: "\n", delay: 1 },
+        { text: " ░▀░▀░▀▀▀░▀▀▀░▀▀▀░▀▀▀░░░▀░▀░▀░▀░▀▀▀░▀░▀░▀▀▀░░▀░░▀▀▀░", delay: 2, style: "font-size: 1.4em" },
+        { text: "\n\n", delay: 100 },
+    ];
+    
+    let currentMessageIndex = 0;
+    let currentCharIndex = 0;
+    
+    const asciiIndex = document.querySelector('.ascii-index');
+
+    function typeNextCharacter() {
+        if (currentMessageIndex >= messages.length) {
+            // Tüm mesajlar yazıldığında index'i göster
+            asciiIndex.classList.remove('hidden');
+            // Ekstra animasyon efekti için
+            document.querySelectorAll('.ascii-item').forEach((item, index) => {
+                item.style.setProperty('--index', index);
+            });
+            setTimeout(() => {
+                // Son ASCII öğesine scroll yap
+                const lastItem = document.querySelector('.ascii-item:last-child');
+                if(lastItem) {
+                    lastItem.scrollIntoView({
+                        behavior: 'auto',
+                        block: 'end'
+                    });
+                }
+            }, 100);
+            return;
+        }
+        
+        const currentMessage = messages[currentMessageIndex];
+        const textToType = currentMessage.text;
+        
+        if (currentCharIndex < textToType.length) {
+            const char = textToType.charAt(currentCharIndex);
+            const span = document.createElement('span');
+            span.textContent = char;
+            
+            if (currentMessage.style) {
+                span.style = currentMessage.style;
+            }
+            
+            terminalText.appendChild(span);
+            currentCharIndex++;
+            
+            setTimeout(typeNextCharacter, currentMessage.delay);
+        } else {
+            currentMessageIndex++;
+            currentCharIndex = 0;
+            setTimeout(typeNextCharacter, 100);
+        }
+    }
+    
+    window.addEventListener('load', function() {
+        draw();
+        typeNextCharacter();
+    });
+    
+    window.addEventListener('resize', function() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    });
+  </script>
+  <!-- DeepSite footer orijinal haliyle korundu -->
+</body>
+
+</html>
