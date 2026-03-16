@@ -99,7 +99,18 @@
     }
 
     .terminal-button.red {
-      background: #ff5f56;
+        background: #ff5f56;
+        position: relative;
+    }
+    
+    .terminal-button.red::before {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: -8px;
+        right: -8px;
+        bottom: -8px;
+        cursor: pointer;
     }
 
     .terminal-button.yellow {
@@ -133,12 +144,14 @@
         background: rgba(0,0,0,0.7);
         display: none;
         z-index: 1000;
+        align-items: center;
+        justify-content: center;
     }
 
     .terminal-modal {
-        position: inherit;
-        top: 5%;
-        left: 5%;
+        position: fixed;
+        top: 50%;
+        left: 50%;
         transform: translate(-50%, -50%);
         z-index: 1001;
         animation: float 8s ease-in-out infinite;
@@ -384,9 +397,9 @@
         <div class="terminal-container terminal-modal" 
             style="width:${iframeWidth}px; 
                     height:${iframeHeight + 40}px"> <!-- Header height compensation -->
-            <div class="terminal-header">
+            <div class="terminal-header" onclick="closeAnimationModal()" style="cursor: pointer;">
                 <div class="terminal-buttons">
-                    <div class="terminal-button red" onclick="closeAnimationModal()"></div>
+                    <div class="terminal-button red"></div>
                     <div class="terminal-button yellow"></div>
                     <div class="terminal-button green"></div>
                 </div>
