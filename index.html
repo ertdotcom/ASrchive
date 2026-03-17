@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ASCII Archive // Terminal v1.0.3</title>
   <style>
-    /* Orijinal CSS tanımlarının tamamı korundu */
     :root {
       --terminal-bg: #0a0a12;
       --terminal-green: #0f0;
@@ -70,6 +69,15 @@
 
       50% {
         transform: translateY(-20px) rotateX(5deg) rotateY(10deg);
+      }
+    }
+
+    @keyframes floatModal {
+      0%, 100% {
+        transform: translate(-50%, -50%) translateY(0) rotateX(10deg) rotateY(5deg);
+      }
+      50% {
+        transform: translate(-50%, -50%) translateY(-20px) rotateX(5deg) rotateY(10deg);
       }
     }
 
@@ -148,16 +156,15 @@
         justify-content: center;
     }
 
-    .terminal-modal {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 1001;
-        animation: float 8s ease-in-out infinite;
-        border: 1px solid var(--terminal-green);
-        box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
-    }
+.terminal-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 1001;
+    box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+    border: 1px solid var(--terminal-green);
+    animation: floatModal 8s ease-in-out infinite;
+}
 
     .terminal-modal .terminal-body {
         overflow: hidden !important;
@@ -178,7 +185,7 @@
         background: var(--terminal-green) !important;
         border: 1px solid rgba(0,255,0,0.3);
         border-radius: 4px;
-        padding: 8px 20px;
+        padding: 6px 10px;
         color: #000;
         font-family: 'Share Tech Mono', monospace;
         transition: all 0.3s;
@@ -189,7 +196,6 @@
         cursor: pointer
     }
 
-    /* ASCII Index Özel Stiller */
     .ascii-index {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -256,7 +262,6 @@
       }
     }
 
-    /* Diğer orijinal stiller korundu */
   </style>
 </head>
 
@@ -540,9 +545,9 @@
         { text: "\n\n", delay: 100 },
         { text: ">> SYSTEM STATUS <<", delay: 10, style: "color: #b19cd9" },
         { text: "\n", delay: 100 },
-        { text: "> Total Artifacts: 42", delay: 20 },
+        { text: "> Total Artifacts: 16", delay: 20 },
         { text: "\n", delay: 50 },
-        { text: "> Last Updated: 2024-03-15", delay: 20 },
+        { text: "> Last Updated: 2025-06-18", delay: 20 },
         { text: "\n", delay: 50 },
         { text: "> Storage Node: github.io", delay: 20 },
         { text: "\n\n", delay: 100 },
@@ -550,7 +555,7 @@
         { text: "\n", delay: 100 },
         { text: "> Click artifacts to view full ASCII", delay: 30 },
         { text: "\n", delay: 50 },
-        { text: "> Use CTRL+F to search", delay: 30 },
+        { text: "> Press ESC or click header to close", delay: 30 },
         { text: "\n", delay: 50 },
         { text: "> Scroll to browse collection", delay: 30 },
         { text: "\n\n", delay: 100 },
